@@ -3,24 +3,23 @@ from flask_cors import CORS
 import sqlite3
 import os
 import requests
-import base64
+import base64 
 
-# Configuration
-GROQ_KEY = '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'
-HF_TOKEN = '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'
+# Configuration - Add your API keys here
+GROQ_KEY = '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'  # Get from https://console.groq.com/keys
+HF_TOKEN = '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'   # Get from https://huggingface.co/settings/tokens
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # Allow frontend to connect
+app.config['UPLOAD_FOLDER'] = 'uploads'
 
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+# Database connection
 def get_db():
     conn = sqlite3.connect('database.db')
-    conn.row_factory = sqlite3.Row
+    conn.row_factory = sqlite3.Row  # Return rows as dictionaries
     return conn
 
+# Initialize database
 def init_db():
     conn = get_db()
     conn.execute('''
@@ -38,13 +37,14 @@ def init_db():
     ''')
     conn.commit()
     conn.close()
+    print("✅ Database initialized!")
 
+# Initialize DB on startup
 init_db()
 
-@app.route('/')
-def home():
-    return jsonify({'status': 'ART by KRM API Running!', 'version': '1.0'})
+# ========== ROUTES ==========
 
+# Get all products
 @app.route('/products', methods=['GET'])
 def get_products():
     conn = get_db()
@@ -53,43 +53,118 @@ def get_products():
     conn.close()
     return jsonify(products)
 
+# Get single product by ID
 @app.route('/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     conn = get_db()
     cursor = conn.execute('SELECT * FROM products WHERE id = ?', (product_id,))
     product = cursor.fetchone()
     conn.close()
+    
     if product:
         return jsonify(dict(product))
     return jsonify({'error': 'Product not found'}), 404
 
+# Add new product
 @app.route('/add-product', methods=['POST'])
 def add_product():
     try:
+        # Get image file
         if 'image' not in request.files:
             return jsonify({'error': 'No image provided'}), 400
+        
         file = request.files['image']
         if file.filename == '':
             return jsonify({'error': 'No file selected'}), 400
+        
+        # Save image
         filename = file.filename
         file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        
+        # Get form data
         data = request.form
+        
+        # Insert into database
         conn = get_db()
         cursor = conn.execute('''
             INSERT INTO products (name, cat, tag, price, badge, image, description, features)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
-            data.get('name'), data.get('cat'), data.get('tag'),
-            int(data.get('price')), data.get('badge', ''), filename,
-            data.get('description', ''), data.get('features', '')
+            data.get('name'),
+            data.get('cat'),
+            data.get('tag'),
+            int(data.get('price')),
+            data.get('badge', ''),
+            filename,
+            data.get('description', ''),
+            data.get('features', '')
         ))
         conn.commit()
         product_id = cursor.lastrowid
         conn.close()
-        return jsonify({'message': 'Product added!', 'id': product_id}), 201
+        
+        return jsonify({
+            'message': 'Product added successfully!',
+            'id': product_id
+        }), 201
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Update product
+@app.route('/update-product/<int:product_id>', methods=['PUT'])
+def update_product(product_id):
+    try:
+        data = request.form
+        conn = get_db()
+        
+        # Check if new image uploaded
+        if 'image' in request.files and request.files['image'].filename != '':
+            file = request.files['image']
+            filename = file.filename
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            
+            conn.execute('''
+                UPDATE products 
+                SET name=?, cat=?, tag=?, price=?, badge=?, image=?, description=?, features=?
+                WHERE id=?
+            ''', (
+                data.get('name'),
+                data.get('cat'),
+                data.get('tag'),
+                int(data.get('price')),
+                data.get('badge', ''),
+                filename,
+                data.get('description', ''),
+                data.get('features', ''),
+                product_id
+            ))
+        else:
+            # Update without changing image
+            conn.execute('''
+                UPDATE products 
+                SET name=?, cat=?, tag=?, price=?, badge=?, description=?, features=?
+                WHERE id=?
+            ''', (
+                data.get('name'),
+                data.get('cat'),
+                data.get('tag'),
+                int(data.get('price')),
+                data.get('badge', ''),
+                data.get('description', ''),
+                data.get('features', ''),
+                product_id
+            ))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({'message': 'Product updated successfully!'})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# Delete product
 @app.route('/delete-product/<int:product_id>', methods=['DELETE'])
 def delete_product(product_id):
     try:
@@ -97,52 +172,122 @@ def delete_product(product_id):
         conn.execute('DELETE FROM products WHERE id = ?', (product_id,))
         conn.commit()
         conn.close()
-        return jsonify({'message': 'Product deleted!'})
+        
+        return jsonify({'message': 'Product deleted successfully!'})
+        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+# Serve uploaded images
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
+# Serve frontend images (for demo/fallback)
 @app.route('/images/<filename>')
 def frontend_images(filename):
+    # Images are in backend/images folder (same level as app.py)
     images_path = os.path.join(os.path.dirname(__file__), 'images')
+    print(f"🖼️  Looking for image: {filename}")
+    print(f"📁 Images path: {images_path}")
+    print(f"✅ File exists: {os.path.exists(os.path.join(images_path, filename))}")
     return send_from_directory(images_path, filename)
 
+# Filter products by category
+@app.route('/products/category/<cat>', methods=['GET'])
+def get_by_category(cat):
+    conn = get_db()
+    cursor = conn.execute('SELECT * FROM products WHERE cat = ?', (cat,))
+    products = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(products)
+
+# Filter products by tag
+@app.route('/products/tag/<tag>', methods=['GET'])
+def get_by_tag(tag):
+    conn = get_db()
+    cursor = conn.execute('SELECT * FROM products WHERE tag = ?', (tag,))
+    products = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return jsonify(products)
+
+# Health check & Serve Frontend
+@app.route('/')
+def home():
+    return send_file('../Frontend/art_by_krm_full_app.html')
+
+# AI Chat Proxy (to avoid CORS) - Using Groq API
 @app.route('/api/chat', methods=['POST'])
 def chat():
     try:
         data = request.json
-        system_prompt = data.get('system', 'You are an AI fashion designer for ART by KRM, a Pakistani handmade fashion store. Respond warmly in English/Urdu mix. Keep responses under 150 words.')
+        print("Data received:", data)  # 👈 Debug log
+        
+        # Get system prompt from frontend (includes product context)
+        system_prompt = data.get('system', '''You are the AI fashion designer for ART by KRM, a premium handmade Pakistani cultural fashion store. You specialize in Pakistani embroidery styles, mirror work, gota work, cultural patterns, and fashion advice combining traditional Pakistani style with modern aesthetics. Respond warmly in English/Urdu mix. Keep responses under 150 words. Use bullet points. Start with a warm affirmative.
+
+IMPORTANT: If user message contains words like "generate", "show", "create", "make", "visualize", "design", "draw" — you MUST end your response with EXACTLY this on a new line:
+[GENERATE_IMAGE: flat lay only, no humans, no models, no mannequin, only fabric/clothing on white background, detailed english prompt]
+
+Rules for image prompt:
+- ALWAYS include: "NO PEOPLE, NO MODELS, NO MANNEQUIN"
+- Focus on fabric laid flat on white background
+- Emphasize embroidery and texture details
+
+Example: "create white embroidered shirt" →
+[GENERATE_IMAGE: white Pakistani kameez flat lay on white background, floral embroidery, NO PEOPLE, NO MODELS, NO MANNEQUIN, fabric detail close up, professional product photography]''')
+        
+        # Add product context instructions if present
+        enhanced_prompt = f'''{system_prompt}
+
+IMPORTANT: If user asks to generate/create/show image:
+- Use the EXACT same style and type as the current product (if viewing one)
+- Only change what user specifically requests (color, embroidery etc)
+- Keep everything else same as original product
+
+End with: [GENERATE_IMAGE: exact same garment type as original, only requested changes, Pakistani fashion, flat lay, white background, NO PEOPLE]'''
+        
         response = requests.post(
             'https://api.groq.com/openai/v1/chat/completions',
             headers={
                 'Content-Type': 'application/json',
-                'Authorization': f'Bearer {GROQ_KEY}'
+                'Authorization': f'Bearer {GROQ_KEY}'  # Using config variable
             },
             json={
                 'model': 'llama-3.3-70b-versatile',
                 'messages': [
-                    {'role': 'system', 'content': system_prompt},
+                    {'role': 'system', 'content': enhanced_prompt}, 
                     {'role': 'user', 'content': data['messages'][0]['content']}
                 ],
                 'max_tokens': 1000
             }
         )
+        
+        print("Groq response:", response.status_code, response.text)  # 👈 Debug log
+        
         result = response.json()
+        # Anthropic format mein convert karo
         return jsonify({
             'content': [{'text': result['choices'][0]['message']['content']}]
         })
     except Exception as e:
+        print("ERROR:", str(e))  # 👈 Debug log
         return jsonify({'error': str(e)}), 500
 
+# AI Image Generation (secure - keys hidden in backend)
 @app.route('/api/generate-image', methods=['POST'])
 def generate_image():
     try:
         data = request.json
         prompt = data.get('prompt', '')
-        full_prompt = f'fashion product photography, {prompt}, Pakistani embroidery, flat lay, white background, no people, professional catalog'
+        
+        print(f"🎨 Generating image for prompt: {prompt}")
+        
+        # SDXL prompt - better for fashion products
+        full_prompt = f'fashion product photography, {prompt}, Pakistani embroidery, clothing only, flat lay, white background, no people, no mannequin, professional catalog, highly detailed'
+        
+        print(f"📸 SDXL prompt: {full_prompt}")
+        
         response = requests.post(
             'https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell',
             headers={
@@ -153,12 +298,53 @@ def generate_image():
             json={'inputs': full_prompt},
             timeout=60
         )
+        
+        print(f"HF Response status: {response.status_code}")
+        
         if response.ok:
+            import base64
             img_base64 = base64.b64encode(response.content).decode('utf-8')
+            print("✅ HuggingFace image generated successfully")
             return jsonify({'image': img_base64})
-        return jsonify({'error': 'Image generation failed'}), 500
+        
+        print(f"❌ HF failed: {response.text}")
+        return jsonify({'error': 'HF failed'}), 500
+        
     except Exception as e:
+        print(f"❌ Image generation ERROR: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
-# Railway uses $PORT automatically with gunicorn
-# No need to specify port here
+@app.route('/seed-products', methods=['GET'])
+def seed_products():
+    conn = get_db()
+    # Check if already seeded
+    cursor = conn.execute('SELECT COUNT(*) as count FROM products')
+    count = cursor.fetchone()['count']
+    if count > 0:
+        conn.close()
+        return jsonify({'message': f'Already has {count} products!'})
+    
+    demo_products = [
+        ('Embroidered Lawn Shirt', 'shirt', 'embroidery', 3400, 'New', 'EmbroidedShirt1.jpeg', 'Elegant handcrafted embroidered shirt with traditional stitching.', 'Hand embroidery work,Soft breathable fabric,Traditional craftsmanship'),
+        ('Embroidered Lawn Shirt', 'shirt', 'embroidery', 3500, '', 'EmbroidedShirt2.jpeg', 'Beautiful embroidered lawn shirt with intricate needlework.', 'Premium lawn fabric,Detailed embroidery,Comfortable fit'),
+        ('Embroidered Lawn Shirt', 'shirt', 'embroidery', 3600, 'Popular', 'EmbroidedShirt3.jpeg', 'Exquisite embroidered lawn shirt with delicate floral patterns.', 'Intricate embroidery,Premium quality,Elegant design'),
+        ('Embroidered Lawn Shirt', 'shirt', 'embroidery', 3700, 'Bestseller', 'EmbroidedShirt4.jpeg', 'Stunning embroidered lawn shirt with traditional Pakistani motifs.', 'Premium embroidery,Soft lawn fabric,Traditional patterns'),
+        ('Mirror Work Shirt', 'shirt', 'mirror', 4200, 'Popular', 'Mirrorworkshirt1.jpeg', 'Stunning mirror work shirt for festive occasions.', 'Mirror work detailing,Festive wear,Handcrafted design'),
+        ('Hand Painted Shirt', 'shirt', 'painted', 3100, 'New', 'PaintedShirt1.jpeg', 'Artistic hand-painted shirt with Pakistani cultural motifs.', 'Hand-painted artwork,Unique design,Soft fabric'),
+        ('Embroidered Hair Bow Clip', 'hair', 'accessories', 400, 'New', 'hair-bow1.jpeg', 'Handcrafted embroidered bow hair clip.', 'Handmade design,Comfortable wear,Easy styling'),
+        ('Embroidered Hair Bow Clip', 'hair', 'accessories', 400, '', 'hair-bow2.jpeg', 'Stylish embroidered bow hair clip.', 'Handcrafted design,Secure hold,Lightweight feel'),
+        ('Embroidered Hair Bow Clip', 'hair', 'accessories', 400, 'Popular', 'hair-bow3.jpeg', 'Simple embroidered bow clip for everyday styling.', 'Handmade finish,Easy to use,Comfort fit'),
+        ('Silk Hair Bow Clip', 'hair', 'accessories', 300, 'New', 'Slikhair-bow1.jpeg', 'Elegant silk hair bow clip with smooth finish.', 'Premium silk fabric,Lightweight design,Smooth texture'),
+        ('Silk Hair Bow Clip', 'hair', 'accessories', 300, '', 'Silkhair-bow2.jpeg', 'Beautiful silk bow clip for graceful hairstyles.', 'Soft silk material,Easy to wear,Stylish look'),
+        ('Hand Painted Floral Dupatta', 'dupatta', 'painted', 2200, 'New', 'paintduppata1.jpeg', 'Beautiful hand-painted floral dupatta.', 'Hand-painted design,Lightweight fabric,Unique artwork'),
+        ('Artistic Painted Silk Dupatta', 'dupatta', 'painted', 2500, '', 'paintduppata2.jpeg', 'Elegant silk dupatta with handcrafted painted motifs.', 'Silk fabric,Hand-painted motifs,Smooth texture'),
+    ]
+    
+    for p in demo_products:
+        conn.execute('''INSERT INTO products (name,cat,tag,price,badge,image,description,features) VALUES (?,?,?,?,?,?,?,?)''', p)
+    
+    conn.commit()
+    conn.close()
+    return jsonify({'message': '13 products added successfully!'})
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)

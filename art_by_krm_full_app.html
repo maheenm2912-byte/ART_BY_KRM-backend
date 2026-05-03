@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ART by KRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --maroon:#7B1C2E;--maroon-dark:#5C1220;--maroon-light:#F5E6E9;
+    --emerald:#1B5E40;--emerald-light:#E8F5EE;
+    --gold:#C8960C;--gold-light:#FDF3D7;--gold-bright:#E8B020;
+    --ivory:#FDF8F0;--ivory-dark:#F5EDD8;
+    --text:#2C1810;--text-muted:#7A5C50;
+    --shadow:0 4px 24px rgba(123,28,46,0.10);
+    --shadow-lg:0 8px 40px rgba(123,28,46,0.16);
+  }
+  body{font-family:'Nunito',sans-serif;background:var(--ivory);color:var(--text);overflow-x:hidden}
+  h1,h2,h3,.serif{font-family:'Cormorant Garamond',serif}
+
+  /* SPLASH */
+  #splash{position:fixed;inset:0;background:var(--maroon-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.8s ease}
+  #splash.out{opacity:0;pointer-events:none}
+  .splash-logo{font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:700;color:#FDF8F0;letter-spacing:4px;animation:shimmer 2s ease-in-out infinite alternate}
+  .splash-sub{font-size:13px;letter-spacing:8px;color:var(--gold-bright);margin-top:8px;text-transform:uppercase;opacity:0;animation:fadein 1s ease 0.6s forwards}
+  .splash-tagline{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:20px;color:#e0c8b0;margin-top:24px;opacity:0;animation:fadein 1s ease 1.2s forwards}
+  .splash-ornament{width:120px;height:2px;background:linear-gradient(90deg,transparent,var(--gold-bright),transparent);margin:20px auto;opacity:0;animation:fadein 1s ease 1.8s forwards}
+  .splash-enter{margin-top:40px;padding:12px 36px;border:1.5px solid var(--gold-bright);color:var(--gold-bright);background:transparent;font-family:'Nunito',sans-serif;font-size:14px;letter-spacing:3px;text-transform:uppercase;cursor:pointer;border-radius:2px;opacity:0;animation:fadein 1s ease 2.2s forwards;transition:all 0.3s}
+  .splash-enter:hover{background:var(--gold-bright);color:var(--maroon-dark)}
+  @keyframes shimmer{0%{text-shadow:0 0 20px rgba(200,150,12,0.3)}100%{text-shadow:0 0 60px rgba(200,150,12,0.8),0 0 100px rgba(200,150,12,0.3)}}
+  @keyframes fadein{to{opacity:1}}
+
+  /* PATTERN BG */
+  .pattern-bg{position:relative}
+  .pattern-bg::before{content:'';position:absolute;inset:0;opacity:0.04;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%237B1C2E' fill-opacity='1'%3E%3Cpath d='M30 0l5 10L45 5l-5 10 10 5-10 5 5 10-10-5-5 10-5-10-10 5 5-10-10-5 10-5-5-10 10 5z'/%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+
+  /* NAV */
+  nav{background:var(--maroon-dark);padding:0 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.3)}
+  .nav-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--ivory);cursor:pointer;letter-spacing:2px;padding:16px 0}
+  .nav-logo span{color:var(--gold-bright)}
+  .nav-links{display:flex;gap:0;align-items:center}
+  .nav-link{color:#e0c8b0;font-size:13px;letter-spacing:2px;text-transform:uppercase;padding:20px 20px;cursor:pointer;transition:color 0.2s;position:relative;border:none;background:none;font-family:'Nunito',sans-serif}
+  .nav-link:hover,.nav-link.active{color:var(--gold-bright)}
+  .nav-link.active::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:30px;height:2px;background:var(--gold-bright)}
+  .nav-cart{background:var(--gold);color:var(--maroon-dark);border:none;padding:8px 20px;border-radius:2px;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.2s;font-family:'Nunito',sans-serif}
+  .nav-cart:hover{background:var(--gold-bright)}
+
+  /* PAGES */
+  .page{display:none;animation:pageIn 0.4s ease}
+  .page.active{display:block}
+  @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* HERO */
+  .hero{background:linear-gradient(135deg,var(--maroon-dark) 0%,var(--maroon) 50%,#9B2335 100%);min-height:520px;display:flex;align-items:center;position:relative;overflow:hidden;padding:80px 60px}
+  .hero::after{content:'';position:absolute;right:-100px;top:-100px;width:500px;height:500px;border-radius:50%;background:rgba(200,150,12,0.06);border:1px solid rgba(200,150,12,0.15)}
+  .hero::before{content:'';position:absolute;right:50px;bottom:-80px;width:300px;height:300px;border-radius:50%;background:rgba(200,150,12,0.04);border:1px solid rgba(200,150,12,0.10)}
+  .hero-content{max-width:560px;position:relative;z-index:1}
+  .hero-badge{display:inline-block;background:rgba(200,150,12,0.2);border:1px solid var(--gold);color:var(--gold-bright);font-size:11px;letter-spacing:4px;text-transform:uppercase;padding:6px 16px;border-radius:2px;margin-bottom:24px}
+  .hero h1{font-family:'Cormorant Garamond',serif;font-size:68px;font-weight:700;color:var(--ivory);line-height:1.1;margin-bottom:20px}
+  .hero h1 em{color:var(--gold-bright);font-style:italic}
+  .hero p{color:#d4b8b0;font-size:16px;line-height:1.7;margin-bottom:36px;max-width:420px}
+  .btn-primary{background:var(--gold);color:var(--maroon-dark);border:none;padding:14px 36px;font-size:14px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.3s;font-family:'Nunito',sans-serif}
+  .btn-primary:hover{background:var(--gold-bright);transform:translateY(-2px);box-shadow:0 8px 24px rgba(200,150,12,0.4)}
+  .btn-outline{background:transparent;color:var(--ivory);border:1.5px solid rgba(255,255,255,0.3);padding:14px 36px;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.3s;font-family:'Nunito',sans-serif;margin-left:12px}
+  .btn-outline:hover{border-color:var(--gold-bright);color:var(--gold-bright)}
+
+  /* SECTION HEADER */
+  .section-header{text-align:center;padding:60px 40px 40px;position:relative}
+  .section-header h2{font-family:'Cormorant Garamond',serif;font-size:44px;font-weight:600;color:var(--maroon-dark);margin-bottom:10px}
+  .section-header p{color:var(--text-muted);font-size:15px;max-width:500px;margin:0 auto}
+  .ornament-line{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto}
+
+  /* CATEGORY STRIP */
+  .cat-strip{display:flex;gap:0;justify-content:center;padding:0 40px 40px;flex-wrap:wrap}
+  .cat-card{flex:1;min-width:180px;max-width:240px;margin:8px;background:white;border:1.5px solid var(--ivory-dark);border-radius:4px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+  .cat-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--maroon);transform:scaleX(0);transition:transform 0.3s}
+  .cat-card:hover{border-color:var(--maroon);box-shadow:var(--shadow);transform:translateY(-4px)}
+  .cat-card:hover::before{transform:scaleX(1)}
+  .cat-icon{font-size:36px;margin-bottom:12px;display:block}
+  .cat-card h3{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--maroon-dark);margin-bottom:4px}
+  .cat-card p{font-size:12px;color:var(--text-muted);letter-spacing:1px}
+
+  /* PRODUCTS GRID */
+  .products-section{padding:20px 40px 60px;background:var(--ivory)}
+  .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:28px;max-width:1200px;margin:0 auto}
+  .product-card{background:white;border-radius:4px;overflow:hidden;box-shadow:0 2px 16px rgba(123,28,46,0.06);transition:all 0.35s;cursor:pointer;border:1px solid transparent}
+  .product-card:hover{transform:translateY(-8px);box-shadow:var(--shadow-lg);border-color:var(--maroon-light)}
+  .product-img{height:280px;overflow:hidden;position:relative;background:var(--ivory-dark)}
+  .product-img-placeholder{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:80px;background:linear-gradient(135deg,var(--ivory-dark),var(--maroon-light))}
+  .product-badge{position:absolute;top:12px;left:12px;background:var(--maroon);color:white;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border-radius:2px}
+  .product-badge.new{background:var(--emerald)}
+  .product-wishlist{position:absolute;top:12px;right:12px;width:32px;height:32px;background:white;border:none;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);transition:all 0.2s}
+  .product-wishlist:hover{background:var(--maroon-light);transform:scale(1.1)}
+  .product-info{padding:16px 18px 20px}
+  .product-cat{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+  .product-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--maroon-dark);margin-bottom:8px}
+  .product-desc{font-size:13px;color:var(--text-muted);line-height:1.5;margin-bottom:14px}
+  .product-footer{display:flex;align-items:center;justify-content:space-between}
+  .product-price{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--maroon)}
+  .product-price small{font-size:13px;color:var(--text-muted);font-family:'Nunito',sans-serif;margin-left:4px}
+  .btn-view{background:var(--maroon-dark);color:white;border:none;padding:8px 18px;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s;font-family:'Nunito',sans-serif}
+  .btn-view:hover{background:var(--maroon);transform:scale(1.03)}
+
+  /* FILTER BAR */
+  .filter-bar{display:flex;gap:8px;padding:0 40px 24px;flex-wrap:wrap;max-width:1280px;margin:0 auto}
+  .filter-btn{background:white;border:1.5px solid var(--ivory-dark);color:var(--text-muted);padding:8px 20px;border-radius:20px;font-size:13px;cursor:pointer;transition:all 0.2s;font-family:'Nunito',sans-serif}
+  .filter-btn:hover,.filter-btn.active{background:var(--maroon);border-color:var(--maroon);color:white}
+
+  /* PRODUCT DETAIL */
+  .product-detail{max-width:1100px;margin:0 auto;padding:48px 40px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start}
+  .detail-img-wrap{position:relative;border-radius:4px;overflow:hidden;background:var(--ivory-dark)}
+  .detail-img-main{width:100%;height:480px;display:flex;align-items:center;justify-content:center;font-size:120px;background:linear-gradient(135deg,var(--ivory-dark),var(--maroon-light))}
+  .detail-thumbs{display:flex;gap:8px;margin-top:12px}
+  .detail-thumb{width:72px;height:72px;background:var(--ivory-dark);border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;border:2px solid transparent;transition:border-color 0.2s}
+  .detail-thumb:hover,.detail-thumb.active{border-color:var(--maroon)}
+  .detail-info{padding-top:8px}
+  .detail-cat{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+  .detail-name{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:600;color:var(--maroon-dark);line-height:1.2;margin-bottom:16px}
+  .detail-price{font-family:'Cormorant Garamond',serif;font-size:34px;color:var(--maroon);margin-bottom:20px}
+  .detail-desc{font-size:15px;color:var(--text-muted);line-height:1.8;margin-bottom:28px}
+  .detail-features{list-style:none;margin-bottom:28px}
+  .detail-features li{font-size:13px;color:var(--text-muted);padding:6px 0;border-bottom:1px solid var(--ivory-dark);display:flex;gap:10px;align-items:center}
+  .detail-features li::before{content:'◆';color:var(--gold);font-size:8px}
+  .detail-actions{display:flex;gap:12px;flex-wrap:wrap}
+  .btn-cart{background:var(--maroon-dark);color:white;border:none;padding:14px 32px;font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.3s;font-family:'Nunito',sans-serif;flex:1}
+  .btn-cart:hover{background:var(--maroon)}
+  .btn-wishlist-lg{background:transparent;border:1.5px solid var(--maroon);color:var(--maroon);padding:14px 20px;border-radius:2px;cursor:pointer;font-size:18px;transition:all 0.2s}
+  .btn-wishlist-lg:hover{background:var(--maroon-light)}
+
+  /* AUTH */
+  .auth-page{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:40px;background:linear-gradient(135deg,var(--maroon-dark) 0%,var(--maroon) 100%);position:relative}
+  .auth-page::before{content:'';position:absolute;inset:0;opacity:0.05;background-image:url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0l3 8 8-3-5 7 7 5-8 2 2 8-7-5-5 7-2-8-8 2 5-7-7-5 8-2-3-8 5 7z' fill='%23FDF8F0' fill-opacity='1'/%3E%3C/svg%3E")}
+  .auth-box{background:var(--ivory);border-radius:4px;padding:48px 44px;width:100%;max-width:440px;position:relative;box-shadow:var(--shadow-lg)}
+  .auth-box h2{font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--maroon-dark);text-align:center;margin-bottom:6px}
+  .auth-box p{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:32px}
+  .form-group{margin-bottom:20px}
+  .form-group label{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--text-muted);margin-bottom:8px}
+  .form-group input{width:100%;padding:12px 16px;border:1.5px solid var(--ivory-dark);border-radius:2px;font-size:15px;font-family:'Nunito',sans-serif;background:white;color:var(--text);outline:none;transition:border-color 0.2s}
+  .form-group input:focus{border-color:var(--maroon)}
+  .auth-submit{width:100%;background:var(--maroon-dark);color:white;border:none;padding:14px;font-size:14px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:2px;margin-top:8px;font-family:'Nunito',sans-serif;transition:background 0.2s}
+  .auth-submit:hover{background:var(--maroon)}
+  .auth-divider{text-align:center;color:var(--text-muted);font-size:13px;margin:20px 0;position:relative}
+  .auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--ivory-dark)}
+  .auth-divider::before{left:0}.auth-divider::after{right:0}
+  .auth-switch{text-align:center;margin-top:24px;font-size:14px;color:var(--text-muted)}
+  .auth-switch span{color:var(--maroon);cursor:pointer;font-weight:600}
+  .auth-switch span:hover{text-decoration:underline}
+
+  /* ABOUT */
+  .about-hero{background:linear-gradient(135deg,var(--maroon-dark),var(--maroon));padding:80px 60px;text-align:center}
+  .about-hero h1{font-family:'Cormorant Garamond',serif;font-size:56px;color:var(--ivory);margin-bottom:16px}
+  .about-hero p{color:#d4b8b0;font-size:17px;max-width:560px;margin:0 auto;line-height:1.7}
+  .about-body{max-width:900px;margin:0 auto;padding:60px 40px}
+  .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-bottom:60px}
+  .about-card{background:white;padding:32px;border-radius:4px;border:1px solid var(--ivory-dark)}
+  .about-card h3{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--maroon-dark);margin-bottom:12px}
+  .about-card p{font-size:14px;color:var(--text-muted);line-height:1.8}
+  .craft-icon{font-size:40px;margin-bottom:16px}
+  .values-strip{display:flex;gap:20px;flex-wrap:wrap;margin-top:40px}
+  .value-badge{background:var(--maroon-light);color:var(--maroon-dark);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600}
+
+  /* AI CHAT */
+  .ai-fab{position:fixed;bottom:32px;right:32px;background:linear-gradient(135deg,var(--maroon-dark),var(--maroon));color:white;border:none;padding:16px 24px;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;z-index:500;box-shadow:0 6px 28px rgba(123,28,46,0.45);transition:all 0.3s;display:flex;align-items:center;gap:10px;font-family:'Nunito',sans-serif;letter-spacing:0.5px}
+  .ai-fab:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(123,28,46,0.55)}
+  .ai-fab-icon{width:22px;height:22px;background:var(--gold-bright);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px}
+  .ai-panel{position:fixed;bottom:0;right:0;width:420px;height:100vh;background:white;z-index:600;box-shadow:-6px 0 40px rgba(0,0,0,0.15);display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1)}
+  .ai-panel.open{transform:translateX(0)}
+  .ai-panel-head{background:var(--maroon-dark);padding:20px 20px;display:flex;align-items:center;justify-content:space-between}
+  .ai-panel-head h3{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ivory)}
+  .ai-panel-head p{font-size:11px;color:var(--gold-bright);letter-spacing:1px;margin-top:2px}
+  .ai-close{background:rgba(255,255,255,0.1);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.2s}
+  .ai-close:hover{background:rgba(255,255,255,0.2)}
+  .ai-messages{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;background:var(--ivory)}
+  .ai-msg{max-width:85%;line-height:1.6;font-size:14px;padding:12px 16px;border-radius:4px;animation:msgIn 0.3s ease}
+  @keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .ai-msg.bot{background:white;border:1px solid var(--ivory-dark);color:var(--text);align-self:flex-start;border-bottom-left-radius:1px}
+  .ai-msg.user{background:var(--maroon-dark);color:white;align-self:flex-end;border-bottom-right-radius:1px}
+  .ai-msg.bot .msg-name{font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:5px;display:block}
+  .ai-typing{align-self:flex-start;background:white;border:1px solid var(--ivory-dark);padding:14px 18px;border-radius:4px;display:flex;gap:6px;align-items:center}
+  .ai-typing span{width:8px;height:8px;background:var(--maroon);border-radius:50%;animation:bounce 1.2s infinite}
+  .ai-typing span:nth-child(2){animation-delay:0.2s}
+  .ai-typing span:nth-child(3){animation-delay:0.4s}
+  @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-8px)}}
+  .ai-input-area{padding:16px;background:white;border-top:1px solid var(--ivory-dark)}
+  .ai-input-row{display:flex;gap:10px;align-items:flex-end}
+  .ai-input{flex:1;border:1.5px solid var(--ivory-dark);border-radius:4px;padding:10px 14px;font-size:14px;font-family:'Nunito',sans-serif;resize:none;outline:none;color:var(--text);background:var(--ivory);max-height:100px;min-height:44px;transition:border-color 0.2s}
+  .ai-input:focus{border-color:var(--maroon)}
+  .ai-send{background:var(--maroon-dark);color:white;border:none;width:44px;height:44px;border-radius:4px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.2s;flex-shrink:0}
+  .ai-send:hover{background:var(--maroon)}
+  .ai-quick-btns{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+  .ai-quick{background:var(--maroon-light);color:var(--maroon-dark);border:1px solid rgba(123,28,46,0.15);padding:5px 12px;border-radius:16px;font-size:12px;cursor:pointer;transition:all 0.2s;font-family:'Nunito',sans-serif}
+  .ai-quick:hover{background:var(--maroon);color:white}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--emerald);color:white;padding:12px 28px;border-radius:4px;font-size:14px;opacity:0;transition:all 0.3s;z-index:800;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  /* FOOTER */
+  footer{background:var(--maroon-dark);padding:48px 60px 24px;color:#d4b8b0}
+  footer h4{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--ivory);margin-bottom:16px}
+  footer p{font-size:13px;line-height:1.8;margin-bottom:8px}
+  .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:40px}
+  .footer-link{display:block;font-size:13px;color:#b89090;margin-bottom:8px;cursor:pointer;transition:color 0.2s}
+  .footer-link:hover{color:var(--gold-bright)}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;font-size:12px;color:#7a5050;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+
+  /* BANNER */
+  .banner{background:var(--gold);color:var(--maroon-dark);text-align:center;padding:10px;font-size:13px;font-weight:600;letter-spacing:2px}
+
+  /* LOADING SPINNER */
+  .spinner{width:40px;height:40px;border:3px solid var(--maroon-light);border-top-color:var(--maroon);border-radius:50%;animation:spin 0.8s linear infinite;margin:40px auto}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* RESPONSIVE */
+  @media(max-width:768px){
+    .hero{padding:48px 24px;min-height:400px}
+    .hero h1{font-size:44px}
+    nav{padding:0 20px}
+    .nav-links{display:none}
+    .products-section{padding:16px 20px 40px}
+    .product-detail{grid-template-columns:1fr;gap:28px;padding:24px 20px}
+    .about-grid{grid-template-columns:1fr}
+    .footer-grid{grid-template-columns:1fr}
+    .ai-panel{width:100%}
+    .filter-bar{padding:0 20px 16px}
+    .section-header{padding:40px 20px 24px}
+    .cat-strip{padding:0 20px 32px}
+  }
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div style="text-align:center">
+    <div style="font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:8px;color:var(--gold-bright);text-transform:uppercase;margin-bottom:16px;opacity:0;animation:fadein 1s ease 0.2s forwards">Handmade with Love</div>
+    <div class="splash-logo">ART<span style="color:var(--gold-bright)"> by </span>KRM</div>
+    <div class="splash-ornament"></div>
+    <div class="splash-tagline">"Where Culture Meets Creativity"</div>
+    <button class="splash-enter" onclick="enterApp()">Enter the World ✦</button>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENT -->
+<div class="banner">✦ Free Shipping on Orders Above Rs. 2000 · Handcrafted with Love from Pakistan ✦</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">ART <span>by</span> KRM</div>
+  <div class="nav-links">
+    <button class="nav-link active" onclick="showPage('home',this)">Home</button>
+    <button class="nav-link" onclick="filterProducts('shirt',this)">Shirts</button>
+    <button class="nav-link" onclick="filterProducts('dupatta',this)">Dupattas</button>
+    <button class="nav-link" onclick="filterProducts('hair',this)">Accessories</button>
+    <button class="nav-link" onclick="showPage('about',this)">About</button>
+    <button class="nav-link" onclick="showPage('auth',this)">Login</button>
+  </div>
+  <button class="nav-cart" onclick="showToast('Cart feature coming soon! 🛒')">🛍 Cart (0)</button>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="home" class="page active">
+  <!-- HERO -->
+  <div class="hero pattern-bg">
+    <div class="hero-content">
+      <div class="hero-badge">✦ New Collection 2025</div>
+      <h1>Pakistani <em>Artisan</em> Fashion</h1>
+      <p>Discover handcrafted clothing and accessories woven with the soul of Pakistan — embroidery, mirror work, and cultural artistry in every thread.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px">
+        <button class="btn-primary" onclick="filterProducts('all')">Shop Collection</button>
+        <button class="btn-outline" onclick="showPage('about')">Our Story</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATEGORIES -->
+  <div class="section-header">
+    <h2>Explore Our Collections</h2>
+    <div class="ornament-line"></div>
+    <p>From traditional embroidery to contemporary fusion — each piece tells a story</p>
+  </div>
+  <div class="cat-strip">
+    <div class="cat-card" onclick="filterProducts('shirt')">
+      <span class="cat-icon">👗</span>
+      <h3>Shirts</h3>
+      <p>Embroidery · Mirror · Painted</p>
+    </div>
+    <div class="cat-card" onclick="filterProducts('dupatta')">
+      <span class="cat-icon">🧣</span>
+      <h3>Dupattas</h3>
+      <p>Painted · Embroidery</p>
+    </div>
+    <div class="cat-card" onclick="filterProducts('hair')">
+      <span class="cat-icon">💎</span>
+      <h3>Hair Accessories</h3>
+      <p>Handmade</p>
+    </div>
+    <div class="cat-card" onclick="filterProducts('all')">
+      <span class="cat-icon">🌸</span>
+      <h3>All Pieces</h3>
+      <p>Browse Full Collection</p>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="section-header" style="padding-top:20px">
+    <h2>Featured Products</h2>
+    <div class="ornament-line"></div>
+  </div>
+  <div class="filter-bar" id="filterBar">
+    <button class="filter-btn active" onclick="applyFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="applyFilter('shirt',this)">Shirts</button>
+    <button class="filter-btn" onclick="applyFilter('embroidery',this)">Embroidery</button>
+    <button class="filter-btn" onclick="applyFilter('mirror',this)">Mirror Work</button>
+    <button class="filter-btn" onclick="applyFilter('painted',this)">Painted</button>
+    <button class="filter-btn" onclick="applyFilter('dupatta',this)">Dupattas</button>
+    <button class="filter-btn" onclick="applyFilter('hair',this)">Accessories</button>
+  </div>
+  <div class="products-section">
+    <div class="products-grid" id="productsGrid"></div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <h4>ART by KRM</h4>
+        <p>Handcrafted Pakistani fashion celebrating centuries of textile artistry. Each piece is made with love, skill, and cultural pride.</p>
+        <p style="margin-top:16px;font-size:12px">📍 Karachi, Pakistan · 📧 hello@artbyKRM.pk</p>
+      </div>
+      <div>
+        <h4>Shop</h4>
+        <span class="footer-link" onclick="filterProducts('shirt')">Shirts</span>
+        <span class="footer-link" onclick="filterProducts('dupatta')">Dupattas</span>
+        <span class="footer-link" onclick="filterProducts('hair')">Hair Accessories</span>
+        <span class="footer-link">New Arrivals</span>
+      </div>
+      <div>
+        <h4>Help</h4>
+        <span class="footer-link">Shipping Policy</span>
+        <span class="footer-link">Returns</span>
+        <span class="footer-link">Size Guide</span>
+        <span class="footer-link" onclick="showPage('about')">About Us</span>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2025 ART by KRM · All rights reserved</span>
+      <span>Made with ♥ in Pakistan</span>
+    </div>
+  </footer>
+</div>
+
+<!-- PRODUCT DETAIL PAGE -->
+<div id="detail" class="page">
+  <div id="detailContent"></div>
+</div>
+
+<!-- ABOUT PAGE -->
+<div id="about" class="page">
+  <div class="about-hero pattern-bg">
+    <h1>Our Story</h1>
+    <div class="ornament-line" style="background:linear-gradient(90deg,transparent,var(--gold-bright),transparent)"></div>
+    <p>ART by KRM is born from a deep love for Pakistani heritage — where every stitch carries generations of artisanal wisdom.</p>
+  </div>
+  <div class="about-body">
+    <div class="about-grid">
+      <div class="about-card">
+        <div class="craft-icon">🧵</div>
+        <h3>The Craft</h3>
+        <p>Every piece in our collection is handcrafted by skilled artisans from across Pakistan. From the intricate embroidery of Sindh to the mirror-work traditions of Balochistan, we preserve and celebrate these ancient techniques.</p>
+      </div>
+      <div class="about-card">
+        <div class="craft-icon">🌹</div>
+        <h3>The Vision</h3>
+        <p>We believe Pakistani craftsmanship deserves a global stage. Our mission is to bring traditional artistry into modern wardrobes — making heritage fashionable, accessible, and alive for the next generation.</p>
+      </div>
+      <div class="about-card">
+        <div class="craft-icon">✨</div>
+        <h3>AI Innovation</h3>
+        <p>We've blended tradition with technology. Our AI customization tool lets you co-create with our artisans — changing colors, patterns, and styles to make each piece uniquely yours.</p>
+      </div>
+      <div class="about-card">
+        <div class="craft-icon">🤝</div>
+        <h3>Artisan Support</h3>
+        <p>We work directly with artisan communities, ensuring fair wages and sustainable practices. Every purchase you make directly empowers the women and families behind each handmade piece.</p>
+      </div>
+    </div>
+    <div style="text-align:center;padding:40px 0">
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--maroon-dark);margin-bottom:16px">Our Values</h2>
+      <div class="values-strip" style="justify-content:center">
+        <span class="value-badge">✦ Handcrafted</span>
+        <span class="value-badge">✦ Authentic</span>
+        <span class="value-badge">✦ Sustainable</span>
+        <span class="value-badge">✦ Culturally Rich</span>
+        <span class="value-badge">✦ Artisan-Made</span>
+        <span class="value-badge">✦ AI-Powered</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="auth" class="page">
+  <div class="auth-page">
+    <div class="auth-box">
+      <div style="text-align:center;margin-bottom:24px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:700;color:var(--maroon-dark)">ART <span style="color:var(--gold)">by</span> KRM</div>
+      </div>
+      <h2 id="authTitle">Welcome Back</h2>
+      <p id="authSub">Sign in to your account</p>
+      <div class="form-group"><label>Email Address</label><input type="email" placeholder="you@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••"></div>
+      <div id="signupExtra" style="display:none">
+        <div class="form-group"><label>Full Name</label><input type="text" placeholder="Your Name"></div>
+        <div class="form-group"><label>Phone</label><input type="tel" placeholder="+92 300 0000000"></div>
+      </div>
+      <button class="auth-submit" onclick="handleAuth()" id="authBtn">Sign In</button>
+      <div class="auth-divider">or</div>
+      <button onclick="showToast('Google login coming soon!')" style="width:100%;background:white;border:1.5px solid var(--ivory-dark);padding:12px;border-radius:2px;font-size:14px;cursor:pointer;color:var(--text);font-family:'Nunito',sans-serif">🔑 Continue with Google</button>
+      <div class="auth-switch" id="authSwitch">Don't have an account? <span onclick="toggleAuth()">Create one</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- AI CHAT PANEL -->
+<button class="ai-fab" onclick="toggleAI()">
+  <div class="ai-fab-icon">✦</div>
+  Customize with AI
+</button>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-head">
+    <div>
+      <h3>✦ AI Designer</h3>
+      <p>ART by KRM · Powered by Claude</p>
+    </div>
+    <button class="ai-close" onclick="toggleAI()">✕</button>
+  </div>
+  <div class="ai-messages" id="aiMessages">
+    <div class="ai-msg bot">
+      <span class="msg-name">✦ KRM AI DESIGNER</span>
+      Assalamu Alaikum! 🌸 I'm your personal AI fashion designer at ART by KRM. I can help you:<br><br>
+      • Customize colors & patterns<br>
+      • Suggest embroidery styles<br>
+      • Create modern-traditional fusion looks<br>
+      • Match outfits with accessories<br><br>
+      What would you like to create today?
+    </div>
+  </div>
+  <div class="ai-input-area">
+    <div class="ai-quick-btns">
+      <button class="ai-quick" onclick="quickMsg('Change the color to emerald green')">💚 Emerald</button>
+      <button class="ai-quick" onclick="quickMsg('Add mirror work embroidery')">🪞 Mirror Work</button>
+      <button class="ai-quick" onclick="quickMsg('Make it more modern and minimal')">✨ Modern</button>
+      <button class="ai-quick" onclick="quickMsg('Suggest matching dupatta')">🧣 Match Dupatta</button>
+    </div>
+    <div class="ai-input-row">
+      <textarea class="ai-input" id="aiInput" placeholder="Describe your dream design..." rows="1" onkeydown="handleAIKey(event)"></textarea>
+      <button class="ai-send" onclick="sendAIMessage()">➤</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// API Configuration
+const API_BASE_URL = 'https://artbykrm-backend-production.up.railway.app';
+
+// Global variables
+let products = [];
+let currentFilter='all';
+let aiOpen=false;
+let isAuthMode='login';
+
+// Fetch products from backend
+async function fetchProducts() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products`);
+    if (!response.ok) throw new Error('Failed to fetch products');
+    
+    const data = await response.json();
+    
+    // Transform backend data to match frontend format
+    products = data.map(p => ({
+      id: p.id,
+      name: p.name,
+      cat: p.cat,
+      tag: p.tag,
+      price: p.price,
+      badge: p.badge || '',
+      img: `/images/${p.image}`,  // Use /images/ instead of /uploads/
+      desc: p.description || '',
+      features: p.features ? p.features.split(',').map(f => f.trim()) : []
+    }));
+    
+    console.log('✅ Products loaded:', products.length);
+    renderProducts();
+    
+  } catch (error) {
+    console.error('❌ Error loading products:', error);
+    showToast('Failed to load products. Using demo data.');
+    
+    // Fallback to demo data if backend not available
+    products = [
+      {id:13,name:'Embroidered Lawn Shirt',cat:'shirt',tag:'embroidery',price:3400,badge:'New',img:'images/EmbroidedShirt1.jpeg',desc:'Elegant handcrafted embroidered shirt designed with traditional stitching techniques for a graceful ethnic look.',features:['Hand embroidery work','Soft breathable fabric','Traditional craftsmanship','Suitable for casual & semi-formal wear']},
+      {id:16,name:'Embroidered Lawn Shirt',cat:'shirt',tag:'embroidery',price:3500,badge:'',img:'images/EmbroidedShirt2.jpeg',desc:'Beautiful embroidered lawn shirt with intricate needlework for elegant everyday styling.',features:['Premium lawn fabric','Detailed embroidery','Comfortable fit','Versatile styling']},
+      {id:19,name:'Embroidered Lawn Shirt',cat:'shirt',tag:'embroidery',price:3600,badge:'Popular',img:'images/EmbroidedShirt3.jpeg',desc:'Exquisite embroidered lawn shirt with delicate floral patterns for sophisticated styling.',features:['Intricate embroidery','Premium quality','Elegant design','Perfect for special occasions']},
+      {id:20,name:'Embroidered Lawn Shirt',cat:'shirt',tag:'embroidery',price:3700,badge:'Bestseller',img:'images/EmbroidedShirt4.jpeg',desc:'Stunning embroidered lawn shirt featuring traditional Pakistani motifs with modern elegance.',features:['Premium embroidery','Soft lawn fabric','Traditional patterns','Comfortable all-day wear']},
+      {id:17,name:'Mirror Work Shirt',cat:'shirt',tag:'mirror',price:4200,badge:'Popular',img:'images/Mirrorworkshirt1.jpeg',desc:'Stunning mirror work shirt featuring traditional embellishments perfect for festive occasions.',features:['Mirror work detailing','Festive wear','Handcrafted design','Eye-catching style']},
+      {id:18,name:'Hand Painted Shirt',cat:'shirt',tag:'painted',price:3100,badge:'New',img:'images/PaintedShirt1.jpeg',desc:'Artistic hand-painted shirt showcasing unique designs inspired by Pakistani cultural motifs.',features:['Hand-painted artwork','Unique design','Soft fabric','Modern ethnic fusion']},
+      {id:10,name:'Embroidered Hair Bow Clip',cat:'hair',tag:'accessories',price:400,badge:'New',img:'images/hair-bow1.jpeg',desc:'Handcrafted embroidered bow hair clip for elegant styling.',features:['Handmade design','Comfortable wear','Easy styling','Daily use']},
+      {id:11,name:'Embroidered Hair Bow Clip',cat:'hair',tag:'accessories',price:400,badge:'',img:'images/hair-bow2.jpeg',desc:'Stylish embroidered bow hair clip designed for a neat look.',features:['Handcrafted design','Secure hold','Lightweight feel','All occasions']},
+      {id:12,name:'Embroidered Hair Bow Clip',cat:'hair',tag:'accessories',price:400,badge:'Popular',img:'images/hair-bow3.jpeg',desc:'Simple embroidered bow clip for everyday elegant styling.',features:['Handmade finish','Easy to use','Comfort fit','Daily wear']},
+      {id:21,name:'Silk Hair Bow Clip',cat:'hair',tag:'accessories',price:300,badge:'New',img:'images/Slikhair-bow1.jpeg',desc:'Elegant silk hair bow clip with smooth finish for sophisticated styling.',features:['Premium silk fabric','Lightweight design','Smooth texture','Perfect for parties']},
+      {id:22,name:'Silk Hair Bow Clip',cat:'hair',tag:'accessories',price:300,badge:'',img:'images/Silkhair-bow2.jpeg',desc:'Beautiful silk bow clip designed for elegant and graceful hairstyles.',features:['Soft silk material','Easy to wear','Stylish look','Everyday elegance']},
+      {id:14,name:'Hand Painted Floral Dupatta',cat:'dupatta',tag:'painted',price:2200,badge:'New',img:'images/paintduppata1.jpeg',desc:'Beautiful hand-painted floral dupatta inspired by traditional Pakistani art forms, perfect for everyday elegance.',features:['Hand-painted design','Lightweight fabric','Unique artwork','Easy to style with any outfit']},
+      {id:15,name:'Artistic Painted Silk Dupatta',cat:'dupatta',tag:'painted',price:2500,badge:'',img:'images/paintduppata2.jpeg',desc:'Elegant silk dupatta featuring handcrafted painted motifs, blending tradition with modern fashion.',features:['Silk fabric','Hand-painted motifs','Smooth & soft texture','Festive & casual wear']},
+    ];
+    renderProducts();
+  }
+}
+
+function showPage(id,navEl){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+  if(navEl)navEl.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function filterProducts(cat,navEl){
+  showPage('home');
+  if(navEl){document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));navEl.classList.add('active')}
+  applyFilter(cat);
+  setTimeout(()=>{document.getElementById('productsGrid').scrollIntoView({behavior:'smooth',block:'start'})},300);
+}
+
+function applyFilter(filter,btn){
+  currentFilter=filter;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  else{const btns=document.querySelectorAll('.filter-btn');btns.forEach(b=>{if(b.textContent.toLowerCase().includes(filter)||filter==='all'&&b.textContent==='All')b.classList.add('active')})}
+  renderProducts();
+}
+
+function renderProducts(){
+  const grid=document.getElementById('productsGrid');
+  const filtered=currentFilter==='all'?products:products.filter(p=>p.cat===currentFilter||p.tag===currentFilter);
+  grid.innerHTML=filtered.map(p=>`
+    <div class="product-card" onclick="showDetail(${p.id})">
+      <div class="product-img">
+        ${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain;" alt="${p.name}">` : `<div class="product-img-placeholder">${p.emoji}</div>`}
+        ${p.badge?`<span class="product-badge ${p.badge==='New'?'new':''}">${p.badge}</span>`:''}
+        <button class="product-wishlist" onclick="event.stopPropagation();showToast('Added to wishlist! ♡')">♡</button>
+      </div>
+      <div class="product-info">
+        <div class="product-cat">${p.cat==='shirt'?'Shirts':p.cat==='dupatta'?'Dupattas':'Hair Accessories'}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">Rs. ${p.price.toLocaleString()}</div>
+          <button class="btn-view">View →</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showDetail(id){
+  const p=products.find(x=>x.id===id);
+  document.getElementById('detailContent').innerHTML=`
+    <div style="background:var(--maroon-dark);padding:16px 40px;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="showPage('home')">
+      <span style="color:var(--gold-bright);font-size:13px">← Back to Collection</span>
+    </div>
+    <div class="product-detail">
+      <div>
+        <div class="detail-img-wrap">
+          ${p.img ? `<img src="${p.img}" style="width:100%;height:480px;object-fit:contain;" alt="${p.name}">` : `<div class="detail-img-main">${p.emoji}</div>`}
+          <div class="detail-thumbs">
+            ${[1,2,3].map((i,idx)=>`<div class="detail-thumb ${idx===0?'active':''}" onclick="this.parentElement.querySelectorAll('.detail-thumb').forEach(t=>t.classList.remove('active'));this.classList.add('active')">${p.img ? `<img src="${p.img}" style="width:100%;height:100%;object-fit:contain;">` : p.emoji}</div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="detail-info">
+        <div class="detail-cat">${p.cat==='shirt'?'Shirts':p.cat==='dupatta'?'Dupattas':'Hair Accessories'} · Handcrafted</div>
+        <div class="detail-name">${p.name}</div>
+        <div class="detail-price">Rs. ${p.price.toLocaleString()}</div>
+        <div class="detail-desc">${p.desc} Each piece is uniquely handcrafted by skilled Pakistani artisans, ensuring no two are exactly alike.</div>
+        <ul class="detail-features">${p.features.map(f=>`<li>${f}</li>`).join('')}</ul>
+        <div class="detail-actions">
+          <button class="btn-cart" onclick="showToast('Added to cart! 🛍')">Add to Cart</button>
+          <button class="btn-wishlist-lg" onclick="showToast('Added to wishlist! ♡')">♡</button>
+        </div>
+        <div style="margin-top:20px;padding:16px;background:var(--gold-light);border-radius:2px;border-left:3px solid var(--gold)">
+          <div style="font-size:12px;color:var(--text-muted);letter-spacing:1px;margin-bottom:4px">ARTISAN NOTE</div>
+          <div style="font-size:13px;color:var(--text);font-style:italic">This piece is handcrafted with love in Pakistan. Slight variations in embroidery are a mark of authentic handmade artistry.</div>
+        </div>
+      </div>
+    </div>
+    <footer style="background:var(--maroon-dark);padding:28px 60px;text-align:center">
+      <p style="color:#b89090;font-size:13px">✦ Free shipping above Rs. 2000 · Returns within 7 days · Secure payment</p>
+    </footer>
+  `;
+  showPage('detail');
+}
+
+function openAIForProduct(name, img, tag, cat){
+  window.currentProduct = {name, img, tag, cat};
+  aiOpen=false;
+  toggleAI();
+  
+  // Product ki image se color extract karo
+  const canvas = document.createElement('canvas');
+  const image = new Image();
+  image.crossOrigin = 'Anonymous';
+  image.src = img;
+  image.onload = function(){
+    canvas.width = 1;
+    canvas.height = 1;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(image, 0, 0, 1, 1);
+    const [r,g,b] = ctx.getImageData(0,0,1,1).data;
+    const hex = '#'+[r,g,b].map(x=>x.toString(16).padStart(2,'0')).join('');
+    window.currentProduct.color = hex;
+    window.currentProduct.colorRgb = `rgb(${r},${g},${b})`;
+    console.log('Product color:', hex);
+  };
+  
+  setTimeout(()=>{
+    addAIMessage(`Wah! Let's customize your **${name}** 🎨\n\nI can help you:\n• Change the color\n• Modify embroidery style\n• Add mirror work or gota\n• Suggest matching dupatta\n\nWhat changes would you like?`,'bot');
+  },400);
+}
+
+function toggleAI(){
+  aiOpen=!aiOpen;
+  document.getElementById('aiPanel').classList.toggle('open',aiOpen);
+}
+
+function sendAIMessage(){
+  const input=document.getElementById('aiInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  addAIMessage(msg,'user');
+  input.value='';
+  input.style.height='auto';
+  showTyping();
+  setTimeout(()=>getAIResponse(msg),800+Math.random()*800);
+}
+
+function quickMsg(msg){addAIMessage(msg,'user');showTyping();setTimeout(()=>getAIResponse(msg),1000);}
+
+function handleAIKey(e){
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendAIMessage();}
+  const ta=e.target;ta.style.height='auto';ta.style.height=Math.min(ta.scrollHeight,100)+'px';
+}
+
+function addAIMessage(text,role){
+  const msgs=document.getElementById('aiMessages');
+  const div=document.createElement('div');
+  div.className=`ai-msg ${role}`;
+  if(role==='bot')div.innerHTML=`<span class="msg-name">✦ KRM AI DESIGNER</span>${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}`;
+  else div.textContent=text;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function showTyping(){
+  const msgs=document.getElementById('aiMessages');
+  const t=document.createElement('div');
+  t.id='typing';t.className='ai-typing';
+  t.innerHTML='<span></span><span></span><span></span>';
+  msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;
+}
+
+function removeTyping(){const t=document.getElementById('typing');if(t)t.remove();}
+
+async function getAIResponse(userMsg){
+  try{
+    // Product context add karo
+    const productContext = window.currentProduct 
+      ? `\n\nUser is currently viewing: "${window.currentProduct.name}" (${window.currentProduct.cat}, ${window.currentProduct.tag} style).`
+      : '';
+    
+    // User message with product context including color
+    const productInfo = window.currentProduct 
+      ? `Current product: ${window.currentProduct.name}, type: ${window.currentProduct.cat}, style: ${window.currentProduct.tag}, dominant color: ${window.currentProduct.colorRgb || 'unknown'}. User wants: ${userMsg}`
+      : userMsg;
+    
+const res = await fetch('https://artbykrm-backend-production.up.railway.app/api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:`You are the AI fashion designer for ART by KRM, a premium handmade Pakistani cultural fashion store. You specialize in Pakistani embroidery styles, mirror work, gota work, cultural patterns, and fashion advice combining traditional Pakistani style with modern aesthetics. Respond warmly in English/Urdu mix. Keep responses under 150 words. Use bullet points. Start with a warm affirmative.${productContext}
+
+IMPORTANT: Only add this tag if user explicitly asks to "generate", "show", "create", "make", or "visualize" an image/design. For normal fashion chat/advice, do NOT add this tag.
+[GENERATE_IMAGE: detailed english prompt for pakistani fashion image]`,
+        messages:[{role:'user',content:productInfo}]
+      })
+    });
+    const data=await res.json();
+    removeTyping();
+    const reply=data.content&&data.content[0]?data.content[0].text:'Bilkul! Could you tell me more about your preferred colors?';
+    const imgMatch=reply.match(/\[GENERATE_IMAGE:\s*(.+?)\]/);
+    const cleanReply=reply.replace(/\[GENERATE_IMAGE:.*?\]/,'').trim();
+    addAIMessage(cleanReply,'bot');
+    if(imgMatch) generateFashionImage(imgMatch[1]);
+  }catch(err){
+    removeTyping();
+    addAIMessage('Wah! Try deep maroon with gold zari embroidery — very classic Pakistani elegance!','bot');
+  }
+}
+
+async function generateFashionImage(prompt){
+  const msgs=document.getElementById('aiMessages');
+  const loadDiv=document.createElement('div');
+  loadDiv.className='ai-msg bot';
+  loadDiv.id='imgLoading';
+  loadDiv.innerHTML=`<span class="msg-name">✦ KRM AI DESIGNER</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="spinner" style="width:20px;height:20px;margin:0;border-width:2px"></div>
+      <span>Generating... 20-30 sec ⏳</span>
+    </div>`;
+  msgs.appendChild(loadDiv);
+  msgs.scrollTop=msgs.scrollHeight;
+  
+  try{
+  const res=await fetch('https://artbykrm-backend-production.up.railway.app/api/generate-image',
+  {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({prompt})
+    });
+    const data=await res.json();
+    if(data.image){
+      showGeneratedImage('data:image/jpeg;base64,'+data.image,'HuggingFace ✨');
+    }else{
+      throw new Error('No image');
+    }
+  }catch(e){
+    document.getElementById('imgLoading')?.remove();
+    addAIMessage('Sorry, image generate nahi hui. Dobara try karo! 🙏','bot');
+  }
+}
+
+function showGeneratedImage(imgUrl,source){
+  document.getElementById('imgLoading')?.remove();
+  const msgs=document.getElementById('aiMessages');
+  const div=document.createElement('div');
+  div.className='ai-msg bot';
+  div.innerHTML=`<span class="msg-name">✦ KRM AI DESIGNER · via ${source}</span>
+    <div style="margin-top:8px">
+      <div id="imgWrapper">
+        <div style="display:flex;align-items:center;gap:8px;color:var(--text-muted);font-size:13px">
+          <div class="spinner" style="width:16px;height:16px;margin:0;border-width:2px"></div>
+          <span>Image load ho rahi hai... (10-15 sec)</span>
+        </div>
+        <img src="${imgUrl}" 
+          style="width:100%;border-radius:4px;max-height:300px;object-fit:cover;display:none"
+          onload="
+            this.previousElementSibling.remove();
+            this.style.display='block';
+            document.getElementById('aiMessages').scrollTop=99999;
+          "
+          onerror="
+            this.parentElement.innerHTML='<p style=color:var(--text-muted);font-size:13px>⚠️ Image timeout — dobara try karo</p>';
+          "
+        >
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <a href="${imgUrl}" target="_blank"
+          style="background:var(--maroon-dark);color:white;padding:6px 14px;border-radius:2px;font-size:12px;text-decoration:none">
+          🔗 Open Image
+        </a>
+        <button onclick="showToast('Order customization coming soon! ✦')"
+          style="background:var(--gold);color:var(--maroon-dark);border:none;padding:6px 14px;border-radius:2px;font-size:12px;cursor:pointer;font-weight:700">
+          ✦ Order This
+        </button>
+      </div>
+    </div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+}
+
+function enterApp(){
+  document.getElementById('splash').classList.add('out');
+  setTimeout(()=>{document.getElementById('splash').style.display='none'},900);
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+function toggleAuth(){
+  isAuthMode=isAuthMode==='login'?'signup':'login';
+  document.getElementById('authTitle').textContent=isAuthMode==='login'?'Welcome Back':'Create Account';
+  document.getElementById('authSub').textContent=isAuthMode==='login'?'Sign in to your account':'Join the ART by KRM family';
+  document.getElementById('authBtn').textContent=isAuthMode==='login'?'Sign In':'Create Account';
+  document.getElementById('signupExtra').style.display=isAuthMode==='signup'?'block':'none';
+  document.getElementById('authSwitch').innerHTML=isAuthMode==='login'?"Don't have an account? <span onclick='toggleAuth()'>Create one</span>":"Already have an account? <span onclick='toggleAuth()'>Sign in</span>";
+}
+
+function handleAuth(){showToast(isAuthMode==='login'?'Welcome back! ✦':'Account created successfully! ✦');setTimeout(()=>showPage('home'),1000);}
+
+// Initialize app - fetch products on load
+fetchProducts();
+
+setTimeout(()=>{
+  if(!sessionStorage.getItem('visited')){
+    sessionStorage.setItem('visited','1');
+  }else{
+    enterApp();
+  }
+},3500);
+</script>
+</body>
+</html>
